@@ -34,6 +34,9 @@ async function passwordResetHandler({ event: { data } }) {
   }
 }
 
-module.exports = passwordResetHandler
-module.exports.default = passwordResetHandler
-module.exports.config = { event: "auth.password_reset" }
+// Same shape as compiled ESM (exports.default + exports.config); a function
+// that is its own .default makes Medusa's resolveExports recurse forever.
+module.exports = {
+  default: passwordResetHandler,
+  config: { event: "auth.password_reset" },
+}
