@@ -1,5 +1,6 @@
-import { createHmac } from "node:crypto"
-import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
+// Plain CommonJS: Render runs `npx medusa start` without `medusa build`, so
+// TypeScript/ESM files in src/ fail to load ("Cannot use import statement").
+const { createHmac } = require("node:crypto")
 
 /**
  * Stovima: Medusa makes the password reset token but sends no email. Hand the
@@ -8,9 +9,7 @@ import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
  * Env: STOVIMA_PASSWORD_RESET_URL (https://stovima.com/api/webhooks/medusa-password-reset)
  *      MEDUSA_WEBHOOK_SECRET (same value as on Stovima)
  */
-export default async function passwordResetHandler({
-  event: { data },
-}: SubscriberArgs<{ entity_id: string; token: string; actor_type: string }>) {
+async function passwordResetHandler({ event: { data } }) {
   const url = process.env.STOVIMA_PASSWORD_RESET_URL
   const secret = process.env.MEDUSA_WEBHOOK_SECRET
   if (!url || !secret) {
@@ -31,10 +30,10 @@ export default async function passwordResetHandler({
     })
     if (!res.ok) console.warn(`[password-reset] Stovima answered ${res.status}`)
   } catch (err) {
-    console.warn("[password-reset] could not reach Stovima:", (err as Error).message)
+    console.warn("[password-reset] could not reach Stovima:", err.message)
   }
 }
 
-export const config: SubscriberConfig = {
-  event: "auth.password_reset",
-}
+module.exports = passwordResetHandler
+module.exports.default = passwordResetHandler
+module.exports.config = { event: "auth.password_reset" }
